@@ -1,0 +1,9 @@
+services:
+  backend:
+    # Override Linux-only host networking with the default bridge network on Windows
+    network_mode: bridge
+
+    # Explicitly expose the API and MAVLink UDP ports (range for multiple drones)
+    ports:
+      - "8080:8080"        # HTTP API
+      - "14550-14570:14550-14570/udp"  # MAVLink UDP in (range)

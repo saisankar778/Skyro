@@ -1,0 +1,71 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# -----------------------------------
+# Frontend/Vite
+# -----------------------------------
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.cache/
+*.tsbuildinfo
+
+# Do not commit local envs (contain local URLs/secrets)
+.env
+.env.*
+
+# -----------------------------------
+# Python/Backend
+# -----------------------------------
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+**/.venv/
+venv/
+ENV/
+.envrc
+
+# SQLite / DB artifacts
+*.sqlite3
+*.db
+backend/drone_orders.db
+
+# Bun cache (keep bun.lock tracked; ignore bun.lockb only)
+bun.lockb
+
+# OS-specific
+Thumbs.db
+
+dron/

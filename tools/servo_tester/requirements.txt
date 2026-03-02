@@ -1,0 +1,8 @@
+# Minimal deps for the Servo Tester GUI
+# Install in a virtualenv: python3 -m venv .venv && . .venv/bin/activate
+# then: pip install -r requirements.txt
+
+# DroneKit uses pymavlink under the hood
+# These versions are broadly compatible; adjust if your environment requires
+DroneKit==2.9.2
+pymavlink==2.4.41

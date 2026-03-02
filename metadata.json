@@ -1,0 +1,5 @@
+{
+  "name": "Copy of SkyWorks - Drone Delivery System",
+  "description": "A web application demonstrating the user, vendor, and admin interfaces for a campus drone food delivery service. This demo simulates the entire order lifecycle from placement to real-time drone tracking and delivery.",
+  "requestFramePermissions": []
+}

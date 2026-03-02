@@ -1,0 +1,28 @@
+# Local environments and caches
+.venv/
+__pycache__/
+*.pyc
+
+# VCS
+.git/
+.gitignore
+
+# OS
+.DS_Store
+
+# Python packaging
+*.egg-info/
+
+# Databases and runtime artifacts
+*.db
+*.sqlite3
+
+# Node/Frontend leftovers if copied accidentally
+node_modules/
+
+# Logs
+*.log
+
+# Docker
+Dockerfile*
+.dockerignore

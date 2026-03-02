@@ -1,0 +1,46 @@
+{
+  "name": "copy-of-skyworks---drone-delivery-system",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:user": "vite --mode user",
+    "dev:vendor": "vite --mode vendor",
+    "dev:admin": "vite --mode admin",
+    "build": "vite build",
+    "build:user": "vite build --mode user",
+    "build:vendor": "vite build --mode vendor",
+    "build:admin": "vite build --mode admin",
+    "preview": "vite preview",
+    "preview:user": "vite preview --outDir dist/user",
+    "preview:vendor": "vite preview --outDir dist/vendor",
+    "preview:admin": "vite preview --outDir dist/admin"
+  },
+  "dependencies": {
+    "@types/leaflet": "^1.9.20",
+    "@types/mapbox-gl": "^3.4.1",
+    "framer-motion": "^12.34.0",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.563.0",
+    "mapbox-gl": "^3.18.1",
+    "qrcode.react": "^4.2.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-leaflet": "^5.0.0",
+    "react-router-dom": "^7.13.0",
+    "vite-plugin-pwa": "^1.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@types/qrcode.react": "^1.0.5",
+    "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
+  }
+}

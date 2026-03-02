@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+websockets
+pydantic
+requests
+dronekit
+pymavlink
+sqlalchemy
+future

@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+SQLAlchemy
+databases         # async DB support
+pydantic
+aiosqlite         # SQLite driver for 'databases'
+boto3
+python-jose
+requests
+razorpay
+python-dotenv

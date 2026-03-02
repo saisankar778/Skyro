@@ -1,0 +1,48 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: areodrone-backend:latest
+    container_name: areodrone-backend
+
+    restart: unless-stopped
+
+    # Use host networking so UDP ports from UI work directly
+    network_mode: "host"
+
+    # Persist SQLite DB
+    volumes:
+      - ./backend/drone_orders.db:/app/drone_orders.db
+
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8080
+      # Allow CORS requests from anywhere
+      - CORS_ORIGINS=*
+      # Deployed Orders Service base URL (for delivery status updates)
+      - ORDERS_API_BASE=https://areodrone-database.onrender.com
+    
+    # If connecting via USB to Pixhawk/Telemetry, uncomment:
+    # devices:
+    #   - "/dev/ttyUSB0:/dev/ttyUSB0"
+    # group_add:
+    #   - "dialout"
+
+    # Healthcheck to ensure the API is responding on port 8080
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://127.0.0.1:8080/',timeout=2).status<500 else sys.exit(1)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+    # Allow time for graceful shutdown
+    stop_grace_period: 30s
+
+    # Cap container logs to avoid disk bloat
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
