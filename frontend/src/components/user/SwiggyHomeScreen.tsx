@@ -16,13 +16,13 @@ import { X, MapPin } from 'lucide-react';
 type Props = {
     cart: CartItem[];
     selectedRestaurantId: string;
-    deliveryLocationId: string; // Add this
-    onSelectLocation: (id: string) => void; // Add this
+    deliveryLocationId: string;
+    onSelectLocation: (id: string) => void;
     onSelectRestaurant: (id: string) => void;
     onAddItem: (item: MenuItem) => void;
     onRemoveItem: (itemId: string) => void;
     onNext: () => void;
-    onTrackOrder: () => void;
+    onTrackOrder: (orderId?: string) => void;
 };
 
 export default function SwiggyHomeScreen({

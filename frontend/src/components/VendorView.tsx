@@ -42,7 +42,7 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
                 <span className={`px-3 py-1 text-xs font-bold rounded-full text-white ${STATUS_COLORS[order.status]}`}>{order.status}</span>
             </div>
             <div className="text-sm text-gray-300">
-                <p>Placed at: {order.createdAt.toLocaleTimeString()}</p>
+                <p>Placed at: {new Date(order.createdAt).toLocaleTimeString()}</p>
                 <ul className="my-2 list-disc list-inside">
                     {order.items.map(item => <li key={item.id}>{item.name} x {item.quantity}</li>)}
                 </ul>

@@ -16,7 +16,8 @@ export default function FloatingCart({ itemCount, totalPrice, onClick }: Props) 
                     initial={{ y: 100, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     exit={{ y: 100, opacity: 0 }}
-                    className="fixed bottom-24 left-4 right-4 z-50 max-w-md mx-auto"
+                    className="fixed left-4 right-4 z-50 max-w-md mx-auto"
+                    style={{ bottom: '96px', top: 'auto' }}
                 >
                     <motion.button
                         onClick={onClick}

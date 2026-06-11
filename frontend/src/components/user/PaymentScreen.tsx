@@ -47,6 +47,7 @@ export default function PaymentScreen({ apiBase, accessToken, phone, cart, total
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
+          'ngrok-skip-browser-warning': 'true',
         },
         body: JSON.stringify({ amount: amountPaise, currency: 'INR', receipt: `skyro-${Date.now()}` }),
       });
@@ -80,6 +81,7 @@ export default function PaymentScreen({ apiBase, accessToken, phone, cart, total
               headers: {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${accessToken}`,
+                'ngrok-skip-browser-warning': 'true',
               },
               body: JSON.stringify(response),
             });

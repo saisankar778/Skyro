@@ -1,9 +1,11 @@
 fastapi
 uvicorn[standard]
 SQLAlchemy
-databases         # async DB support
+databases[asyncpg]
+asyncpg
+psycopg2-binary
 pydantic
-aiosqlite         # SQLite driver for 'databases'
+aiosqlite
 boto3
 python-jose
 requests

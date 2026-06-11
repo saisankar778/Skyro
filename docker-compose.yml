@@ -5,15 +5,21 @@ services:
       dockerfile: Dockerfile
     image: areodrone-backend:latest
     container_name: areodrone-backend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
     restart: unless-stopped
 
-    # Use host networking so UDP ports from UI work directly
-    network_mode: "host"
+    ports:
+      - "8080:8080"
+      - "14550:14550/udp"
+      - "14560:14560/udp"
 
-    # Persist SQLite DB
-    volumes:
-      - ./backend/drone_orders.db:/app/drone_orders.db
+    # Use host networking so UDP ports from UI work directly
+    # network_mode: "host"
+
+
+    # No SQLite volume needed — using AWS RDS PostgreSQL
 
     environment:
       - HOST=0.0.0.0
@@ -21,8 +27,8 @@ services:
       # Allow CORS requests from anywhere
       - CORS_ORIGINS=*
       # Deployed Orders Service base URL (for delivery status updates)
-      - ORDERS_API_BASE=https://areodrone-database.onrender.com
-    
+      - ORDERS_API_BASE=http://backend-orders:8000
+
     # If connecting via USB to Pixhawk/Telemetry, uncomment:
     # devices:
     #   - "/dev/ttyUSB0:/dev/ttyUSB0"
@@ -31,7 +37,7 @@ services:
 
     # Healthcheck to ensure the API is responding on port 8080
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://127.0.0.1:8080/',timeout=2).status<500 else sys.exit(1)"]
+      test: [ "CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://127.0.0.1:8080/',timeout=2).status<500 else sys.exit(1)" ]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -46,3 +52,142 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  backend-orders:
+    build:
+      context: ./backend-orders
+      dockerfile: Dockerfile
+    image: skyro-orders:latest
+    container_name: skyro-orders
+    restart: unless-stopped
+
+    ports:
+      - "8000:8000"
+
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - CORS_ORIGINS=*
+      # AWS RDS PostgreSQL
+      - DATABASE_URL=postgresql+asyncpg://skyro_admin:sky517227@skyro-db.cl4o2c2matz8.ap-south-1.rds.amazonaws.com:5432/skyro?sslmode=require
+
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://127.0.0.1:8000/',timeout=2).status<500 else sys.exit(1)" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+
+    stop_grace_period: 15s
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  backend-fleet-ai:
+    build:
+      context: ./backend-fleet-ai
+      dockerfile: Dockerfile
+    image: skyro-fleet-ai:latest
+    container_name: skyro-fleet-ai
+    restart: unless-stopped
+
+    ports:
+      - "8002:8002"
+
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8002
+      - CORS_ORIGINS=*
+      # Point to other services (use container names in bridge network)
+      - DRONE_BACKEND_URL=http://backend:8080
+      - DRONE_BACKEND_WS=ws://backend:8080/ws
+      - ORDERS_API_BASE=http://backend-orders:8000
+      # PostgreSQL (Amazon RDS)
+      - DATABASE_URL=postgresql+asyncpg://skyro_admin:sky517227@skyro-db.cl4o2c2matz8.ap-south-1.rds.amazonaws.com:5432/skyro?sslmode=require
+      # Redis (Amazon ElastiCache or local dev redis service below)
+      - REDIS_URL=redis://redis:6379
+      # Safety thresholds (tune for your airspace)
+      - SAFE_THRESHOLD_M=20
+      - PREDICT_SECONDS=7
+      - CRUISE_SPEED_MPS=5.0
+
+    depends_on:
+      - backend
+      - backend-orders
+      - postgres
+      - redis
+
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://127.0.0.1:8002/',timeout=2).status<500 else sys.exit(1)" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+
+    stop_grace_period: 15s
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # LOCAL DEV: PostgreSQL (mirrors Amazon RDS in production)
+  # For AWS: set DATABASE_URL to your RDS endpoint in the env above
+  # ─────────────────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: skyro-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: skyro
+      POSTGRES_USER: skyro_admin
+      POSTGRES_PASSWORD: local_dev_pass
+    volumes:
+      - skyro_pgdata:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U skyro_admin -d skyro" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # LOCAL DEV: Redis (mirrors Amazon ElastiCache in production)
+  # For AWS: set REDIS_URL to your ElastiCache endpoint in the env above
+  # ─────────────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: skyro-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - skyro_redisdata:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+volumes:
+  skyro_pgdata:
+  skyro_redisdata:

@@ -52,35 +52,55 @@ const createCustomIcon = (iconComponent: React.ReactNode, color: string, size: n
 };
 
 // Drone image-based icon from public/D.png
-const createDroneIcon = (color: string, size: number = 32) => {
-  const iconHtml = `
+const createDroneIcon = (color: string, label?: string, size: number = 32) => {
+  const labelHtml = label ? `
     <div style="
-      background-color: ${color};
-      border: 2px solid white;
-      border-radius: 50%;
-      width: ${size}px;
-      height: ${size}px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      background-color: rgba(15, 23, 42, 0.85);
+      color: #e2e8f0;
+      font-size: 10px;
+      font-weight: bold;
+      padding: 1px 5px;
+      border-radius: 4px;
+      margin-top: 3px;
+      white-space: nowrap;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     ">
-      <img src="/D.png" alt="Drone" style="width: ${size-8}px; height: ${size-8}px; object-fit: contain;" />
+      ${label}
+    </div>
+  ` : '';
+
+  const iconHtml = `
+    <div style="display: flex; flex-direction: column; align-items: center;">
+      <div style="
+        background-color: ${color};
+        border: 2px solid white;
+        border-radius: 50%;
+        width: ${size}px;
+        height: ${size}px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      ">
+        <img src="/D.png" alt="Drone" style="width: ${size-8}px; height: ${size-8}px; object-fit: contain;" />
+      </div>
+      ${labelHtml}
     </div>
   `;
   return L.divIcon({
     html: iconHtml,
     className: 'custom-drone-icon',
-    iconSize: [size, size],
+    iconSize: [size, size + (label ? 20 : 0)],
     iconAnchor: [size/2, size/2],
   });
 };
 
 const restaurantIcon = createCustomIcon(<BuildingIcon />, '#10b981', 28);
 const deliveryIcon = createCustomIcon(<LocationMarkerIcon />, '#3b82f6', 28);
-const droneIcon = createDroneIcon('#06b6d4', 32);
-const droneMovingIcon = createDroneIcon('#f59e0b', 32);
-const droneDisconnectedIcon = createDroneIcon('#6b7280', 32);
+const droneIcon = createDroneIcon('#06b6d4', undefined, 32);
+const droneMovingIcon = createDroneIcon('#f59e0b', undefined, 32);
+const droneDisconnectedIcon = createDroneIcon('#6b7280', undefined, 32);
 
 type LatLon = { lat: number; lon: number };
 
@@ -170,9 +190,8 @@ const Map: React.FC<MapProps> = ({
       const isMoving = drone.status === 'On Mission' || drone.status === 'Returning Home';
       const isConnected = drone.isConnected;
 
-      let icon = droneDisconnectedIcon;
-      if (isConnected) icon = isMoving ? droneMovingIcon : droneIcon;
-      byId[drone.id] = icon;
+      const color = isConnected ? (isMoving ? '#f59e0b' : '#06b6d4') : '#6b7280';
+      byId[drone.id] = createDroneIcon(color, drone.id, 32);
     });
     return byId;
   }, [dronesToDisplay]);

@@ -1,0 +1,10 @@
+version: "3"
+agent:
+  authtoken: "32KsrWrcKBCStKsAam5VgeHDyzq_3VsxrQwZmyK3bFXg48u4L"
+tunnels:
+  orders:
+    proto: http
+    addr: 8000
+  drone:
+    proto: http
+    addr: 8080

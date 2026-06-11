@@ -43,7 +43,10 @@ export default function LoginScreen({ apiBase, onLoggedIn, onGoToSignup, initial
     try {
       const res = await fetch(`${apiBase}/api/auth/email/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
         body: JSON.stringify({ email, password }),
       });
       const data = (await res.json()) as AuthTokens & { detail?: string };

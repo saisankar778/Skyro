@@ -24,12 +24,17 @@ const AdminView: React.FC = () => {
     
     if (!context) return null;
 
-    const { orders, drones, activityLog, mapStyle, connectToDrone, disconnectFromDrone, commandRtl, updateDroneConnectionString, toggleMapStyle, updateOrderStatus } = context;
+    const { orders, drones, activityLog, mapStyle, connectToDrone, disconnectFromDrone, commandRtl, updateDroneConnectionString, toggleMapStyle, updateOrderStatus, addDrone } = context;
 
     const stats = {
         activeMissions: drones.filter(d => d.status === DroneStatus.ON_MISSION || d.status === DroneStatus.RETURNING_HOME).length,
         idleDrones: drones.filter(d => d.status === DroneStatus.IDLE).length,
-        pendingOrders: orders.filter(o => o.status === 'Placed' || o.status === 'Accepted' || o.status === 'Cooking').length,
+        pendingOrders: orders.filter(o =>
+            o.status === OrderStatus.PLACED ||
+            o.status === OrderStatus.ACCEPTED ||
+            o.status === OrderStatus.COOKING ||
+            o.status === OrderStatus.READY_FOR_LAUNCH
+        ).length,
     };
 
     return (
@@ -113,7 +118,15 @@ const AdminView: React.FC = () => {
                     </div>
 
                     <div className="bg-gray-800 p-4 rounded-xl shadow-2xl flex-1 flex flex-col">
-                        <h3 className="font-bold text-xl mb-4">Drone Fleet Control</h3>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="font-bold text-xl">Drone Fleet Control</h3>
+                            <button 
+                                onClick={addDrone}
+                                className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-1 px-3 text-sm rounded-lg transition flex items-center space-x-1"
+                            >
+                                <span>+ Add Drone</span>
+                            </button>
+                        </div>
                         <div className="space-y-4 overflow-y-auto pr-2 flex-grow">
                             {drones.map(drone => (
                                 <div key={drone.id} className="bg-gray-700/50 p-3 rounded-lg">

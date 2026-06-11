@@ -68,4 +68,14 @@ bun.lockb
 # OS-specific
 Thumbs.db
 
-dron/
+**/dron/
+**/dronw/
+logcat.txt
+check_key_result.txt
+curl_output.txt
+check_logcat_maps.py
+ngrok-fleet.yml
+archive_local/
+Skyro_app/.build-outputs/
+Skyro_app/*.log
+Skyro_app/debug.keystore.base64

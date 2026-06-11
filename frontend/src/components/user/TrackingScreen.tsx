@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, Check, MapPin, MoreVertical, Phone, Home } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { AppContext } from '../../context/AppContext';
-import { DELIVERY_LOCATIONS, RESTAURANTS, STATUS_COLORS, HOME_LOCATION } from '../../constants';
+import { DELIVERY_LOCATIONS, RESTAURANTS, HOME_LOCATION } from '../../constants';
 import { Order, OrderStatus } from '../../types';
 import Map from '../Map';
 
@@ -36,6 +36,7 @@ const formatEta = (secondsTotal: number) => {
 const OrderStatusTracker: React.FC<{ order: Order }> = ({ order }) => {
   const statuses = [
     OrderStatus.PLACED,
+    OrderStatus.ACCEPTED,
     OrderStatus.COOKING,
     OrderStatus.READY_FOR_LAUNCH,
     OrderStatus.EN_ROUTE,
@@ -99,6 +100,7 @@ const OrderStatusTracker: React.FC<{ order: Order }> = ({ order }) => {
               <h4 className={`text-sm font-bold ${isCurrent ? 'text-gray-900' : 'text-dark-text'}`}>{status}</h4>
               <p className="text-xs text-gray-500">
                 {status === OrderStatus.PLACED && 'Order received by restaurant'}
+                {status === OrderStatus.ACCEPTED && 'Restaurant confirmed your order'}
                 {status === OrderStatus.COOKING && 'Chef is preparing your food'}
                 {status === OrderStatus.READY_FOR_LAUNCH && 'Drone is ready for takeoff'}
                 {status === OrderStatus.EN_ROUTE && 'Drone is flying to your location'}
@@ -117,24 +119,65 @@ type Props = {
   onBrowse: () => void;
 };
 
+// Inline color map for status badge — STATUS_COLORS from constants uses Tailwind classes,
+// so we need hex/hsl values for inline style usage.
+const STATUS_INLINE_COLORS: Partial<Record<OrderStatus, string>> = {
+  [OrderStatus.PLACED]: '#3b82f6',
+  [OrderStatus.ACCEPTED]: '#06b6d4',
+  [OrderStatus.COOKING]: '#f59e0b',
+  [OrderStatus.READY_FOR_LAUNCH]: '#a855f7',
+  [OrderStatus.EN_ROUTE]: '#6366f1',
+  [OrderStatus.DELIVERED]: '#22c55e',
+  [OrderStatus.FAILED]: '#dc2626',
+  [OrderStatus.DECLINED]: '#6b7280',
+};
+
 export default function TrackingScreen({ userId, onBrowse }: Props) {
   const context = useContext(AppContext);
   const [isSheetExpanded, setIsSheetExpanded] = useState(false);
   const sheetScrollRef = useRef<HTMLDivElement>(null);
   const touchStartYRef = useRef<number | null>(null);
 
-  const activeOrder = useMemo(
-    () =>
-      context?.orders.find(
-        (o) =>
-          o.user === userId,
-      ),
-    [context?.orders, userId],
-  );
+  const activeOrder = useMemo(() => {
+    const userOrders = context?.orders.filter(o => o.user === userId) ?? [];
+    // Prefer active orders over terminal ones
+    const activeStatuses = [
+      OrderStatus.PLACED,
+      OrderStatus.ACCEPTED,
+      OrderStatus.COOKING,
+      OrderStatus.READY_FOR_LAUNCH,
+      OrderStatus.EN_ROUTE,
+    ];
+    const active = userOrders.find(o => activeStatuses.includes(o.status as OrderStatus));
+    if (active) return active;
+    // Fall back to most recent order (could be Delivered, etc.)
+    return userOrders[0] ?? null;
+  }, [context?.orders, userId]);
 
   const droneForOrder = context?.drones.find((d) => d.id === activeOrder?.droneId);
-  const restaurantForOrder = RESTAURANTS.find((r) => r.id === activeOrder?.restaurantId);
-  const locationForOrder = DELIVERY_LOCATIONS.find((l) => l.id === activeOrder?.deliveryLocationId);
+  const restaurantForOrder = (context?.restaurants ?? []).find((r) => r.id === activeOrder?.restaurantId)
+    ?? RESTAURANTS.find((r) => r.id === activeOrder?.restaurantId);
+
+  // Find delivery location — order may store either a UUID (from DB) or a name-based ID
+  const locationForOrder = useMemo(() => {
+    if (!activeOrder?.deliveryLocationId) return undefined;
+    const locId = activeOrder.deliveryLocationId;
+    // Check hardcoded locations first (name-based IDs like 'SR_Block')
+    const fromConst = DELIVERY_LOCATIONS.find(l => l.id === locId);
+    if (fromConst) return fromConst;
+    // Check context DB locations (UUID IDs)
+    const dbLoc = (context?.deliveryLocations ?? []).find(
+      l => l.id === locId || l.name === locId || l.name.replace(/\s+/g, '_') === locId
+    );
+    if (dbLoc) {
+      return {
+        id: dbLoc.id,
+        name: dbLoc.name,
+        location: { lat: dbLoc.latitude, lon: dbLoc.longitude },
+      };
+    }
+    return undefined;
+  }, [activeOrder?.deliveryLocationId, context?.deliveryLocations]);
 
   const estimatedTimeLabel = useMemo(() => {
     const speedMetersPerSecond = 5;
@@ -338,7 +381,7 @@ export default function TrackingScreen({ userId, onBrowse }: Props) {
                           exit={{ opacity: 0, y: -6 }}
                           transition={{ duration: 0.2, ease: 'easeOut' }}
                           className="text-[12px] font-extrabold"
-                          style={{ color: STATUS_COLORS[activeOrder.status] || '#111827' }}
+                          style={{ color: STATUS_INLINE_COLORS[activeOrder.status] || '#111827' }}
                         >
                           {activeOrder.status}
                         </motion.div>

@@ -34,32 +34,15 @@ type Props = {
 export default function OrdersScreen({ onTrackOrder }: Props) {
     const context = useContext(AppContext);
 
-    // Get current user ID from local storage as AppContext doesn't expose it directly in a reactive way usually
-    // But we know AppContext has getCurrentUserId internally. For now, we'll read from localStorage.
-    const currentUserId = localStorage.getItem('skyro_user');
+    // Get current user ID - use localStorage or default to demo_user
+    const currentUserId = localStorage.getItem('skyro_user') || 'demo_user';
 
     const userOrders = useMemo(() => {
         if (!context?.orders) return [];
-        // Filter orders for the current user (if logged in)
-        // If no user is logged in (demo/guest), maybe show local orders or empty?
-        // Let's show all local orders if userId matches or if we're in a "demo" flow where user might be implicit
-        if (!currentUserId) return [];
         return context.orders
             .filter(order => order.user === currentUserId)
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }, [context?.orders, currentUserId]);
-
-    if (!currentUserId) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-6">
-                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                    <ShoppingBag size={32} className="text-gray-400" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-800">No Orders Yet</h3>
-                <p className="text-gray-500 mt-2">Log in to see your past orders and track active deliveries.</p>
-            </div>
-        );
-    }
 
     if (userOrders.length === 0) {
         return (
@@ -79,7 +62,9 @@ export default function OrdersScreen({ onTrackOrder }: Props) {
 
             <div className="space-y-4">
                 {userOrders.map((order) => {
-                    const restaurant = RESTAURANTS.find(r => r.id === order.restaurantId);
+                    const restaurant = context?.restaurants?.find(r => r.id === order.restaurantId)
+                        || RESTAURANTS.find(r => r.id === order.restaurantId);
+                    const restaurantName = restaurant?.name || 'Unknown Restaurant';
                     const itemCount = order.items.reduce((acc, item) => acc + item.quantity, 0);
                     const isActive = [OrderStatus.PLACED, OrderStatus.ACCEPTED, OrderStatus.COOKING, OrderStatus.READY_FOR_LAUNCH, OrderStatus.EN_ROUTE].includes(order.status);
 
@@ -93,7 +78,7 @@ export default function OrdersScreen({ onTrackOrder }: Props) {
                             <div className="flex justify-between items-start mb-3">
                                 <div>
                                     <h3 className="font-bold text-gray-800 text-lg">
-                                        {restaurant?.name || 'Unknown Restaurant'}
+                                        {restaurantName}
                                     </h3>
                                     <p className="text-xs text-gray-500">
                                         {new Date(order.createdAt).toLocaleDateString()} • {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

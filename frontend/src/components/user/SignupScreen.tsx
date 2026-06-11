@@ -37,7 +37,10 @@ export default function SignupScreen({ apiBase, onBackToLogin, onSignupComplete 
     try {
       const res = await fetch(`${apiBase}/api/auth/email/signup`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
         body: JSON.stringify({ email, password }),
       });
       const data = (await res.json()) as { ok?: boolean; detail?: string };
@@ -65,7 +68,10 @@ export default function SignupScreen({ apiBase, onBackToLogin, onSignupComplete 
     try {
       const res = await fetch(`${apiBase}/api/auth/email/confirm`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
         body: JSON.stringify({ email, code: code.trim() }),
       });
       const data = (await res.json()) as { ok?: boolean; detail?: string };

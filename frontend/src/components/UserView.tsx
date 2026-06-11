@@ -14,6 +14,8 @@ const STORAGE_KEYS = {
   // No auth keys for demo mode
 };
 
+const DEMO_USER_ID = 'demo_user';
+
 const UserView: React.FC = () => {
   const context = useContext(AppContext);
   const apiBase = (import.meta.env.VITE_API_BASE as string | undefined) || '';
@@ -23,6 +25,13 @@ const UserView: React.FC = () => {
   const [selectedRestaurantId, setSelectedRestaurantId] = useState<string>(RESTAURANTS[0].id);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [deliveryLocationId, setDeliveryLocationId] = useState<string>(DELIVERY_LOCATIONS[0].id);
+
+  // Always store demo user ID so OrdersScreen filter can match it
+  useEffect(() => {
+    try {
+      localStorage.setItem('skyro_user', DEMO_USER_ID);
+    } catch (_) { /* storage not available */ }
+  }, []);
 
   const cartTotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
 
@@ -47,7 +56,7 @@ const UserView: React.FC = () => {
 
   const handlePaymentVerified = () => {
     if (!context) return;
-    context.placeOrder('demo_user', cart, cartTotal, deliveryLocationId, selectedRestaurantId);
+    context.placeOrder(DEMO_USER_ID, cart, cartTotal, deliveryLocationId, selectedRestaurantId);
     setCart([]);
     setStep('tracking');
   };
@@ -87,7 +96,7 @@ const UserView: React.FC = () => {
         onAddItem={handleAddItem}
         onRemoveItem={handleRemoveItem}
         onNext={() => setStep('cart')}
-        onTrackOrder={() => setStep('tracking')}
+        onTrackOrder={(_orderId?: string) => setStep('tracking')}
       />
     );
   }
@@ -141,15 +150,7 @@ const UserView: React.FC = () => {
     );
   }
 
-  // Handle explicit tracking step or check context for active orders
-  // For now, if step is tracking, show TrackingScreen
-  if (step === 'tracking') {
-    return (
-      <TrackingScreen userId='demo_user' onBrowse={() => setStep('food')} />
-    );
-  }
-
-  return <TrackingScreen userId='demo_user' onBrowse={() => setStep('food')} />;
+  return <TrackingScreen userId={DEMO_USER_ID} onBrowse={() => setStep('food')} />;
 };
 
 export default UserView;

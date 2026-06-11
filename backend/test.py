@@ -12,7 +12,7 @@ def set_servo(channel: int, pwm_value: int):
     """
     Sets a servo connected to a specified channel to a given PWM value.
     :param channel: The servo channel (e.g., 9 for SERVO9)
-    :param pwm_value: The PWM value (1000–2000 µs typical)
+    :param pwm_value: The PWM value (1000-2000 ?s typical)
     """
     print(f"Setting servo at channel {channel} to PWM {pwm_value}")
     msg = vehicle.message_factory.command_long_encode(
